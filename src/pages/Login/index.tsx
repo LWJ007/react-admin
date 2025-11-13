@@ -173,6 +173,7 @@ function LoginContainer(): JSX.Element {
         setLoading(false);
       }
     } catch (e) {
+      console.error(e);
       // 验证未通过
     }
   };
@@ -185,7 +186,7 @@ function LoginContainer(): JSX.Element {
   // 验证码改变时触发
   const onVcodeChange = (code: string | null): void => {
     form.setFieldsValue({
-      vcode: code, // 开发模式自动赋值验证码，正式环境，这里应该赋值''
+      vcode: "", // 开发模式自动赋值验证码，正式环境，这里应该赋值''
     });
     setCodeValue(code || "");
   };

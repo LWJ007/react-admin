@@ -10,7 +10,7 @@ export default function LoadingComponent(): JSX.Element {
   return (
     <div className="loading">
       <img src={ImgLoading} />
-      <div>加载中...</div>
+      <div>加载中1...</div>
     </div>
   );
 }

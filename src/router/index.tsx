@@ -4,10 +4,9 @@
 // 第三方库
 // ==================
 import React, { useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { message } from "antd";
-import loadable from "@loadable/component";
 
 // ==================
 // 自定义的东西
@@ -15,48 +14,19 @@ import loadable from "@loadable/component";
 import tools from "@/util/tools";
 
 // ==================
-// 组件
+// 路由配置和渲染器
 // ==================
-import { AuthNoLogin, AuthWithLogin, AuthNoPower } from "./AuthProvider";
-import Loading from "../components/Loading";
-import BasicLayout from "@/layouts/BasicLayout";
-import UserLayout from "@/layouts/UserLayout";
-
-// 全局提示只显示2秒
-message.config({
-  duration: 2,
-});
+import { routesConfig } from "./routes.config";
+import { renderRoutes } from "./RouteRenderer";
 
 // ==================
 // 类型声明
 // ==================
 import { RootState, Dispatch } from "@/store";
 
-// ==================
-// 异步加载各路由模块
-// ==================
-const [
-  NotFound,
-  NoPower,
-  Login,
-  Home,
-  MenuAdmin,
-  PowerAdmin,
-  RoleAdmin,
-  UserAdmin,
-] = [
-  () => import("../pages/ErrorPages/404"),
-  () => import("../pages/ErrorPages/401"),
-  () => import("../pages/Login"),
-  () => import("../pages/Home"),
-  () => import("../pages/System/MenuAdmin"),
-  () => import("../pages/System/PowerAdmin"),
-  () => import("../pages/System/RoleAdmin"),
-  () => import("../pages/System/UserAdmin"),
-].map((item) => {
-  return loadable(item as any, {
-    fallback: <Loading />,
-  });
+// 全局提示只显示2秒
+message.config({
+  duration: 2,
 });
 
 // ==================
@@ -77,68 +47,7 @@ function RouterCom(): JSX.Element {
     }
   }, [dispatch.app, userinfo.userBasicInfo]);
 
-  return (
-    <Routes>
-      <Route
-        path="/user"
-        element={
-          <AuthWithLogin>
-            <UserLayout />
-          </AuthWithLogin>
-        }
-      >
-        <Route path="/user" element={<Navigate to="login" />}></Route>
-        <Route path="login" element={<Login />}></Route>
-        <Route path="*" element={<Navigate to="login" />} />
-      </Route>
-      <Route
-        path="/"
-        element={
-          <AuthNoLogin>
-            <BasicLayout />
-          </AuthNoLogin>
-        }
-      >
-        <Route path="/" element={<Navigate to="home" />} />
-        <Route path="home" element={<Home />} />
-        <Route
-          path="system/menuadmin"
-          element={
-            <AuthNoPower>
-              <MenuAdmin />
-            </AuthNoPower>
-          }
-        />
-        <Route
-          path="system/poweradmin"
-          element={
-            <AuthNoPower>
-              <PowerAdmin />
-            </AuthNoPower>
-          }
-        />
-        <Route
-          path="system/roleadmin"
-          element={
-            <AuthNoPower>
-              <RoleAdmin />
-            </AuthNoPower>
-          }
-        />
-        <Route
-          path="system/useradmin"
-          element={
-            <AuthNoPower>
-              <UserAdmin />
-            </AuthNoPower>
-          }
-        />
-        <Route path="404" element={<NotFound />} />
-        <Route path="401" element={<NoPower />} />
-        <Route path="*" element={<Navigate to="404" />} />
-      </Route>
-    </Routes>
-  );
+  return <Routes>{renderRoutes(routesConfig)}</Routes>;
 }
 
 export default RouterCom;
