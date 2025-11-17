@@ -1,0 +1,1 @@
+import{j as s,av as o}from"./index-91261815.js";import{L as t,F as a}from"./index-7762f8b5.js";import"./Sider-f969c651.js";import"./omit-644b1847.js";const{Content:e}=t;function c(){return s.jsxs(t,{className:"page-user",children:[s.jsx(e,{className:"content",children:s.jsx(o,{})}),s.jsx(a,{className:"user-layout"})]})}export{c as default};
