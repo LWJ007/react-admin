@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*' # 当推送 v 开头的标签时触发,如 v1.0.0
+
+permissions:
+  contents: write # 需要写权限来创建 release
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 获取完整历史记录用于生成 changelog
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.3'
+          cache: 'npm'
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+
+      - name: 获取 pnpm store 目录
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: 设置 pnpm 缓存
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 代码检查
+        run: pnpm run prettier
+
+      - name: 构建项目
+        run: pnpm run build
+        env:
+          NODE_ENV: production
+
+      - name: 打包构建产物
+        run: |
+          cd dist
+          tar -czf ../react-admin-dist.tar.gz .
+          zip -r ../react-admin-dist.zip .
+          cd ..
+
+      - name: 生成 Changelog
+        id: changelog
+        run: |
+          # 获取上一个标签
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -z "$PREV_TAG" ]; then
+            # 如果没有上一个标签,获取所有提交
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            # 获取两个标签之间的提交
+            CHANGELOG=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+          
+          # 保存到文件
+          echo "$CHANGELOG" > CHANGELOG.txt
+          
+          # 输出到 GitHub Actions
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## 🎉 React Admin ${{ github.ref_name }}
+            
+            ### 📝 更新内容
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### 📦 下载
+            - **react-admin-dist.tar.gz** - Linux/Mac 压缩包
+            - **react-admin-dist.zip** - Windows 压缩包
+            
+            ### 🚀 部署说明
+            1. 下载对应平台的压缩包
+            2. 解压到 Web 服务器目录
+            3. 配置 Nginx/Apache 指向解压目录
+            4. 访问应用
+            
+            ### 📖 文档
+            查看 [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) 获取更多信息
+          files: |
+            react-admin-dist.tar.gz
+            react-admin-dist.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 部署到 GitHub Pages (可选)
+        if: success()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          commit_message: 'Deploy ${{ github.ref_name }}'
+
