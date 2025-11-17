@@ -3,9 +3,9 @@
  * 根据路由配置动态生成路由组件
  */
 
-import React, { ComponentType, LazyExoticComponent } from "react";
+import React from "react";
 import { Route, Navigate } from "react-router-dom";
-import loadable from "@loadable/component";
+import loadable, { LoadableComponent } from "@loadable/component";
 
 // ==================
 // 组件
@@ -28,9 +28,7 @@ import { componentMap, layoutMap } from "./routes.config";
  * @param componentPath 组件路径
  * @returns 懒加载组件
  */
-function getLazyComponent(
-  componentPath: string
-): LazyExoticComponent<ComponentType<any>> {
+function getLazyComponent(componentPath: string): LoadableComponent<any> {
   const importFunc = componentMap[componentPath];
 
   if (!importFunc) {
@@ -51,9 +49,7 @@ function getLazyComponent(
  * @param layoutType 布局类型
  * @returns 布局组件
  */
-function getLayoutComponent(
-  layoutType: string
-): LazyExoticComponent<ComponentType<any>> | null {
+function getLayoutComponent(layoutType: string): LoadableComponent<any> | null {
   const importFunc = layoutMap[layoutType];
 
   if (!importFunc) {

@@ -175,7 +175,11 @@ function PowerAdminContainer() {
   ) => {
     if (info.selected) {
       // 选中时才触发
-      getData(keys[0]);
+      const key = keys[0];
+      // 确保 key 是 string 或 number 类型
+      if (typeof key === "string" || typeof key === "number") {
+        getData(key);
+      }
       setTreeSelect({
         title: info.node.title,
         id: info.node.id,
